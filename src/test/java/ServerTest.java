@@ -1,11 +1,16 @@
-import org.junit.Test;
-import static org.junit.Assert.*;
 import org.json.JSONObject;
-import java.io.*;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 
 public class ServerTest {
@@ -35,7 +40,7 @@ public class ServerTest {
 
     @org.junit.After
     public void close() throws Exception {
-        if (out != null)  out.close();
+        if (out != null) out.close();
         if (sock != null) sock.close();
     }
 
@@ -52,7 +57,7 @@ public class ServerTest {
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
 
-        String i = (String) in.readUTF();
+        String i = in.readUTF();
         // assuming I get correct JSON back
         JSONObject res = new JSONObject(i);
 
@@ -70,7 +75,7 @@ public class ServerTest {
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
 
-        i = (String) in.readUTF();
+        i = in.readUTF();
         // assuming I get correct JSON back
         res = new JSONObject(i);
 
@@ -89,7 +94,7 @@ public class ServerTest {
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
 
-        i = (String) in.readUTF();
+        i = in.readUTF();
         // assuming I get correct JSON back
         res = new JSONObject(i);
 
@@ -107,7 +112,7 @@ public class ServerTest {
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
 
-        i = (String) in.readUTF();
+        i = in.readUTF();
         // assuming I get correct JSON back
         res = new JSONObject(i);
 
@@ -127,7 +132,7 @@ public class ServerTest {
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
 
-        i = (String) in.readUTF();
+        i = in.readUTF();
         // assuming I get correct JSON back
         res = new JSONObject(i);
 
@@ -148,7 +153,7 @@ public class ServerTest {
         os.writeObject(req1.toString());
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
-        String i = (String) in.readUTF();
+        String i = in.readUTF();
         // assuming I get correct JSON back
         JSONObject res = new JSONObject(i);
         // test response
@@ -163,7 +168,7 @@ public class ServerTest {
         os.writeObject(req2.toString());
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
-        i = (String) in.readUTF();
+        i = in.readUTF();
         // assuming I get correct JSON back
         res = new JSONObject(i);
         System.out.println(res);
@@ -188,7 +193,7 @@ public class ServerTest {
         os.writeObject(req.toString());
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
-        String i = (String) in.readUTF();
+        String i = in.readUTF();
         // assuming I get correct JSON back
         JSONObject res = new JSONObject(i);
         // test response
@@ -210,7 +215,7 @@ public class ServerTest {
         os.writeObject(req2.toString());
         // make sure it wrote and doesn't get cached in a buffer
         os.flush();
-        i = (String) in.readUTF();
+        i = in.readUTF();
         // assuming I get correct JSON back
         res = new JSONObject(i);
         System.out.println(res);
@@ -224,7 +229,7 @@ public class ServerTest {
         // create a correct req for server
         os.writeObject("a");
 
-        String i = (String) in.readUTF();
+        String i = in.readUTF();
         // assuming I get correct JSON back
         JSONObject res = new JSONObject(i);
 
@@ -234,5 +239,164 @@ public class ServerTest {
 
         // calling the other test to make sure server continues to work and the "continue" does what it is supposed to do
         addRequest();
+    }
+
+    @Test
+    public void quizRequest() throws IOException {
+        // create a correct req for server
+        JSONObject req = new JSONObject();
+        req.put("type", "quiz");
+        req.put("question", "What is the capital of France?");
+        List<String> myList = Arrays.asList(
+                "Paris",
+                "London",
+                "Berlin",
+                "Madrid"
+        );
+        req.put("options", myList);
+        req.put("answer", 0);
+        // write the whole message
+        os.writeObject(req.toString());
+        // make sure it wrote and doesn't get cached in a buffer
+        os.flush();
+        String i = in.readUTF();
+        // assuming I get correct JSON back
+        JSONObject res = new JSONObject(i);
+        // test response
+        assertTrue(res.getBoolean("ok"));
+        assertEquals("quiz", res.getString("type"));
+        assertEquals(0, res.getInt("result"));
+
+    }
+
+    @Test
+    public void quizRequestWrong() throws IOException {
+        // create a correct req for server
+        JSONObject req = new JSONObject();
+        req.put("type", "quiz");
+        req.put("question", "What is the capital of France?");
+        List<String> myList = Arrays.asList(
+                "Paris",
+                "London",
+                "Berlin",
+                "Madrid"
+        );
+        req.put("options", myList);
+        req.put("answer", 5);
+        // write the whole message
+        os.writeObject(req.toString());
+        // make sure it wrote and doesn't get cached in a buffer
+        os.flush();
+        String i = in.readUTF();
+        // assuming I get correct JSON back
+        JSONObject res = new JSONObject(i);
+        // test response
+        assertFalse(res.getBoolean("ok"));
+        assertEquals("Answer is not in range of options", res.getString("message"));
+
+    }
+
+    @Test
+    public void concatenationRequest() throws IOException {
+        // create a correct req for server
+        JSONObject req = new JSONObject();
+        req.put("type", "concatenation");
+        List<String> myList = Arrays.asList(
+                "hello",
+                "world",
+                "!"
+        );
+        req.put("strings", myList);
+        // write the whole message
+        os.writeObject(req.toString());
+        // make sure it wrote and doesn't get cached in a buffer
+        os.flush();
+        String i = in.readUTF();
+        // assuming I get correct JSON back
+        JSONObject res = new JSONObject(i);
+        // test response
+        assertTrue(res.getBoolean("ok"));
+        assertEquals("concatenation", res.getString("type"));
+        assertEquals("helloworld!", res.getString("result"));
+
+    }
+
+    @Test
+    public void testStringConcatenationSuccess() {
+        // Setup
+        JSONObject input = new JSONObject();
+        input.put("type", "stringconcatenation");
+        input.put("string1", "Hello");
+        input.put("string2", "World");
+
+        // Execute
+        JSONObject result = SockServer.stringConcatenation(input);
+
+        // Assert
+        Assert.assertTrue(result.getBoolean("ok"));
+        Assert.assertEquals("stringconcatenation", result.getString("type"));
+        Assert.assertEquals("HelloWorld", result.getString("result"));
+    }
+
+    @Test
+    public void testStringConcatenationMissingString1() {
+        // Setup
+        JSONObject input = new JSONObject();
+        input.put("type", "stringconcatenation");
+        input.put("string2", "World");
+
+        // Execute
+        JSONObject result = SockServer.stringConcatenation(input);
+
+        // Assert
+        Assert.assertFalse(result.getBoolean("ok"));
+        Assert.assertEquals("Field string1 does not exist in request", result.getString("message"));
+    }
+
+    @Test
+    public void testStringConcatenationMissingString2() {
+        // Setup
+        JSONObject input = new JSONObject();
+        input.put("type", "stringconcatenation");
+        input.put("string1", "Hello");
+
+        // Execute
+        JSONObject result = SockServer.stringConcatenation(input);
+
+        // Assert
+        Assert.assertFalse(result.getBoolean("ok"));
+        Assert.assertEquals("Field string2 does not exist in request", result.getString("message"));
+    }
+
+    @Test
+    public void testStringConcatenationInvalidString1Type() {
+        // Setup
+        JSONObject input = new JSONObject();
+        input.put("type", "stringconcatenation");
+        input.put("string1", 123);
+        input.put("string2", "World");
+
+        // Execute
+        JSONObject result = SockServer.stringConcatenation(input);
+
+        // Assert
+        Assert.assertFalse(result.getBoolean("ok"));
+        Assert.assertEquals("Field string1 needs to be of type: String", result.getString("message"));
+    }
+
+    @Test
+    public void testStringConcatenationInvalidString2Type() {
+        // Setup
+        JSONObject input = new JSONObject();
+        input.put("type", "stringconcatenation");
+        input.put("string1", "Hello");
+        input.put("string2", 456);
+
+        // Execute
+        JSONObject result = SockServer.stringConcatenation(input);
+
+        // Assert
+        Assert.assertFalse(result.getBoolean("ok"));
+        Assert.assertEquals("Field string2 needs to be of type: String", result.getString("message"));
     }
 }
