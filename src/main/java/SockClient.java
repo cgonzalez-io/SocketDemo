@@ -139,16 +139,44 @@ public class SockClient {
                 // !! you will most likely need to parse the response for the other 2 services!
                 String i = in.readUTF();
                 JSONObject res = new JSONObject(i);
+                // ... after receiving the response from server into res ...
                 System.out.println("Got response: " + res);
                 if (res.getBoolean("ok")) {
-                    if (res.getString("type").equals("echo")) {
-                        System.out.println(res.getString("echo"));
-                    } else {
-                        System.out.println(res.getInt("result"));
+                    String type = res.getString("type");
+                    switch (type) {
+                        case "echo":
+                            // For the echo service, print the echoed string.
+                            System.out.println(res.getString("echo"));
+                            break;
+                        case "add":
+                        case "addmany":
+                            // For addition services, the result is an integer.
+                            System.out.println(res.getInt("result"));
+                            break;
+                        case "stringconcatenation":
+                            // For string concatenation, the result is a string.
+                            System.out.println(res.getString("result"));
+                            break;
+                        case "quizgame":
+                            // Handle the quiz game response based on your protocol.
+                            // For example, if it has a "question" field then print that, etc.
+                            if (res.has("question")) {
+                                System.out.println("Question: " + res.getString("question"));
+                            } else if (res.has("result")) {
+                                boolean correct = res.getBoolean("result");
+                                System.out.println("Your answer is " + (correct ? "correct" : "incorrect"));
+                            }
+                            break;
+                        default:
+                            // If the response type is unrecognized
+                            System.out.println("Unrecognized response type: " + type);
+                            break;
                     }
                 } else {
+                    // If the response indicates an error, print the error message.
                     System.out.println(res.getString("message"));
                 }
+
             }
             // want to keep requesting services so don't close connection
             //overandout();
