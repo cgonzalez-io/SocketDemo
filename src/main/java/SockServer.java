@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.DataOutputStream;
 import java.io.ObjectInputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -67,15 +66,15 @@ public class SockServer {
     private static void handleClient(Socket clientSocket) {
         // Use try-with-resources to ensure streams and socket are closed.
         try (
-            ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-            DataOutputStream os = new DataOutputStream(clientSocket.getOutputStream())
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                DataOutputStream os = new DataOutputStream(clientSocket.getOutputStream())
         ) {
             // Holds the current quiz question (for quiz game requests).
             final Question[] currentQuizQuestionHolder = new Question[1];
-                boolean connected = true;
-                while (connected) {
+            boolean connected = true;
+            while (connected) {
                 String input = "";
-                    try {
+                try {
                     input = (String) in.readObject();
                     logger.info("[{}] Received request: {}", clientSocket.getRemoteSocketAddress(), input);
                 } catch (Exception e) {
@@ -87,8 +86,8 @@ public class SockServer {
                 JSONObject res = isValid(input);
                 if (res.has("ok") && !res.getBoolean("ok")) {
                     writeOut(os, res);
-                        continue;
-                    }
+                    continue;
+                }
 
                 // Process the request.
                 JSONObject req;
@@ -100,37 +99,37 @@ public class SockServer {
                     errorRes.put("ok", false);
                     errorRes.put("message", "Invalid JSON format.");
                     writeOut(os, errorRes);
-                        continue;
-                    }
+                    continue;
+                }
 
-                    res = testField(req, "type");
-                    if (!res.getBoolean("ok")) { // no "type" header provided
-                        res = noType(req);
+                res = testField(req, "type");
+                if (!res.getBoolean("ok")) { // no "type" header provided
+                    res = noType(req);
                     writeOut(os, res);
-                        continue;
-                    }
+                    continue;
+                }
 
                 try {
                     // Use switch or if-else to process request by type.
                     String reqType = req.getString("type");
                     switch (reqType) {
                         case "echo":
-                        res = echo(req);
+                            res = echo(req);
                             break;
                         case "add":
-                        res = add(req);
+                            res = add(req);
                             break;
                         case "addmany":
-                        res = addmany(req);
+                            res = addmany(req);
                             break;
                         case "stringconcatenation":
-                        res = stringConcatenation(req);
+                            res = stringConcatenation(req);
                             break;
                         case "quizgame":
                             res = quizGame(req, currentQuizQuestionHolder);
                             break;
                         default:
-                        res = wrongType(req);
+                            res = wrongType(req);
                             break;
                     }
                 } catch (Exception e) {
@@ -152,7 +151,7 @@ public class SockServer {
             } catch (Exception e) {
                 logger.error("Error closing client socket: {}", e.getMessage(), e);
             }
-            }
+        }
     }
 
     /**
@@ -391,14 +390,4 @@ public class SockServer {
         }
     }
 
-    // Sends the response to the client.
-    static void overandout() {
-        try {
-            if (os != null) os.close();
-            if (in != null) in.close();
-            if (sock != null && !sock.isClosed()) sock.close();
-        } catch (Exception e) {
-            logger.error("Error closing connections: {}", e.getMessage(), e);
-        }
-    }
 }
