@@ -123,10 +123,20 @@ public class SockServer {
                             res = addmany(req);
                             break;
                         case "stringconcatenation":
-                            res = stringConcatenation(req);
+                            // If the request contains the "strings" field (an array),
+                            // then call the helper that concatenates arrays.
+                            if (req.has("strings"))
+                                res = concatenation(req);
+                            else
+                                res = stringConcatenation(req);
                             break;
                         case "quizgame":
-                            res = quizGame(req, currentQuizQuestionHolder);
+                            // If the request contains the "options" field,
+                            // then it’s the multiple‐choice version; call the helper method for that.
+                            if (req.has("options"))
+                                res = quiz(req);
+                            else
+                                res = quizGame(req, currentQuizQuestionHolder);
                             break;
                         default:
                             res = wrongType(req);
@@ -379,6 +389,76 @@ public class SockServer {
         return res;
     }
 
+    static JSONObject quiz(JSONObject req) {
+        logger.info("Processing quiz request: {}", req);
+        JSONObject response = new JSONObject();
+        response.put("type", "quizgame");
+        try {
+            // Ensure that all required fields exist.
+            JSONObject resTest = testField(req, "question");
+            if (!resTest.getBoolean("ok")) return resTest;
+            resTest = testField(req, "options");
+            if (!resTest.getBoolean("ok")) return resTest;
+            resTest = testField(req, "answer");
+            if (!resTest.getBoolean("ok")) return resTest;
+
+            String question = req.getString("question");
+            JSONArray options = req.getJSONArray("options");
+            int answer = req.getInt("answer");
+
+            // Check that answer index is within the valid range.
+            if (answer < 0 || answer >= options.length()) {
+                response.put("ok", false);
+                response.put("message", "Answer is not in range of options");
+                return response;
+            }
+            // For simplicity, assume that the provided answer is accepted as correct,
+            // and simply return it. (You can extend this logic if needed.)
+            response.put("ok", true);
+            response.put("result", answer);
+            return response;
+        } catch (Exception e) {
+            logger.error("Error processing quiz request: {}", e.getMessage(), e);
+            response.put("ok", false);
+            response.put("message", "Error processing quiz request: " + e.getMessage());
+            return response;
+        }
+    }
+
+    //Helper methods to handle combined requests
+
+    static JSONObject concatenation(JSONObject req) {
+        logger.info("Processing concatenation request: {}", req);
+        JSONObject res = testField(req, "strings");
+        if (!res.getBoolean("ok")) {
+            return res;
+        }
+        JSONArray arr;
+        try {
+            arr = req.getJSONArray("strings");
+        } catch (JSONException e) {
+            res.put("ok", false);
+            res.put("message", "Field strings needs to be of type: JSON Array");
+            return res;
+        }
+        StringBuilder concatenated = new StringBuilder();
+        for (int i = 0; i < arr.length(); i++) {
+            try {
+                String s = arr.getString(i);
+                concatenated.append(s);
+            } catch (JSONException e) {
+                res.put("ok", false);
+                res.put("message", "All elements in strings must be of type: String");
+                return res;
+            }
+        }
+        JSONObject response = new JSONObject();
+        response.put("type", "stringconcatenation");
+        response.put("ok", true);
+        response.put("result", concatenated.toString());
+        return response;
+    }
+
     // A simple class to encapsulate a quiz question and its answer
     static class Question {
         String questionText;
@@ -389,5 +469,6 @@ public class SockServer {
             this.answer = answer;
         }
     }
+
 
 }
