@@ -3,53 +3,51 @@ apply plugin: 'java'
 description = "Client Server Socket Example"
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-  implementation "junit:junit:4.12"
-  implementation 'org.json:json:20171018' // org.json
+    implementation "junit:junit:4.12"
+    implementation 'org.json:json:20171018' // org.json
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.16'
 }
 
 // Server task - allows host and port configuration as inputs
 task Server(type: JavaExec) {
-  group = 'TCP Server/Client'
-  description = 'Creates Server socket which waits for connections'
+    group = 'TCP Server/Client'
+    description = 'Creates Server socket which waits for connections'
 
-  classpath = sourceSets.main.runtimeClasspath
+    classpath = sourceSets.main.runtimeClasspath
 
-  main = 'SockServer'
+    main = 'SockServer'
 
-  // Default values for host and port
-  def defaultPort = 8888
-  def defaultHost = "0.0.0.0" // Default to public interface
+    // Default values for host and port
+    def defaultPort = 8888
 
-  // Use shorter property names "host" and "port"
-  inputs.property("host", project.hasProperty("host") ? project.host : defaultHost)
-  inputs.property("port", project.hasProperty("port") ? project.port : defaultPort)
+    inputs.property("port", project.hasProperty("port") ? project.port : defaultPort)
 
-  args inputs.properties["host"] // Pass host argument to main class
-  args inputs.properties["port"] // Pass port argument to main class
+    args inputs.properties["port"] // Pass port argument to main class
 }
 
 // Client task - allows host and port configuration as inputs
 task Client(type: JavaExec) {
-  group = 'TCP Server/Client'
-  description = 'Creates Client socket which connects to server and sends a message'
+    group = 'TCP Server/Client'
+    description = 'Creates Client socket which connects to server and sends a message'
 
-  standardInput = System.in
-  classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    classpath = sourceSets.main.runtimeClasspath
 
-  main = 'SockClient'
+    main = 'SockClient'
 
-  // Default values for host and port
-  def defaultHost = "localhost"
-  def defaultPort = 8888
+    // Default values for host and port
+    def defaultHost = "localhost"
+    def defaultPort = 8888
 
-  // Use shorter property names "host" and "port"
-  inputs.property("host", project.hasProperty("host") ? project.host : defaultHost)
-  inputs.property("port", project.hasProperty("port") ? project.port : defaultPort)
+    // Use shorter property names "host" and "port"
+    inputs.property("host", project.hasProperty("host") ? project.host : defaultHost)
+    inputs.property("port", project.hasProperty("port") ? project.port : defaultPort)
 
-  args inputs.properties["host"] // Pass host argument to main class
-  args inputs.properties["port"] // Pass port argument to main class
+    args inputs.properties["host"] // Pass host argument to main class
+    args inputs.properties["port"] // Pass port argument to main class
 }

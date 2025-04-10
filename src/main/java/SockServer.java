@@ -29,15 +29,12 @@ public class SockServer {
 
     public static void main(String[] args) {
 
-        if (args.length < 2) {
+        if (args.length < 1) {
             throw new IllegalArgumentException("Expected host and port as arguments: <host> <port>");
         }
 
-        String host = args[0];
-        int port = Integer.parseInt(args[1]);
-
         try {
-            port = Integer.parseInt(args[1]);
+            port = Integer.parseInt(args[0]);
         } catch (NumberFormatException nfe) {
             System.out.println("[Port|sleepDelay] must be an integer");
             System.exit(2);
@@ -45,8 +42,8 @@ public class SockServer {
 
         try {
             //open socket
-            ServerSocket serv = new ServerSocket(port,50, java.net.InetAddress.getByName(host));
-            System.out.println("Server started on " + host + ":" + port);
+            ServerSocket serv = new ServerSocket(port);
+            System.out.println("Server started on port " + port);
 
             while (true) {
                 System.out.println("Server waiting for a connection");

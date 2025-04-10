@@ -8,8 +8,30 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Scanner;
 
+
 /**
- *
+ * The SockClient class is a simple TCP client that communicates with a server using JSON-based messages.
+ * It provides users with several interactive service options, such as echoing messages, performing arithmetic calculations,
+ * string concatenation, and engaging in a quiz game. The client connects to a server specified by the host and port
+ * provided as command-line arguments.
+ * The services include:
+ * 1. Echo: Sends a string to the server and receives the same string as a response.
+ * 2. Add: Sends two numbers to the server and receives their sum as a response.
+ * 3. AddMany: Sends an array of numbers to the server and receives their sum as a response.
+ * 4. String Concatenation: Sends two strings to the server and receives their concatenation as a response.
+ * 5. Quiz Game Service: Allows the user to either add a new question-answer pair, request a quiz question, or answer a current question.
+ * The communication is handled using JSON objects for requests and responses. This class demonstrates basic input/output
+ * handling, server communication, and JSON parsing in a Java application.
+ * Notes:
+ * - The program requires the host (as a String) and port (as an integer) to be passed as command-line arguments.
+ * - Input validation is minimal and assumes correct user input where required.
+ * - All services communicate with the server through sockets using ObjectOutputStream for outgoing messages
+ * and DataInputStream for incoming messages.
+ * Static Methods:
+ * - main(String[] args): The entry point of the application. Initializes client-server communication, prompts the user for input,
+ * and handles responses for the selected services.
+ * - overandout(): Closes all input/output streams and the socket connection.
+ * - connect(String host, int port): Establishes a connection to the server using the specified host and port.
  */
 public class SockClient {
     static Socket sock = null;
@@ -186,6 +208,12 @@ public class SockClient {
         }
     }
 
+    /**
+     * Closes the resources used for communication, including the input stream,
+     * output stream, and socket connection.
+     *
+     * @throws IOException if an I/O error occurs while attempting to close any of the resources
+     */
     private static void overandout() throws IOException {
         //closing things, could
         in.close();
@@ -193,6 +221,15 @@ public class SockClient {
         sock.close(); // close socked after sending
     }
 
+    /**
+     * Establishes a connection to the specified host and port.
+     * Initializes the socket, output stream, object output stream, and input stream
+     * required for communication.
+     *
+     * @param host the hostname or IP address of the server to connect to
+     * @param port the specific port number on the server to connect to
+     * @throws IOException if an I/O error occurs when creating the socket or streams
+     */
     public static void connect(String host, int port) throws IOException {
         // open the connection
         sock = new Socket(host, port); // connect to host and socket on port 8888
