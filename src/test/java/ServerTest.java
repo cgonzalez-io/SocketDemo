@@ -245,7 +245,7 @@ public class ServerTest {
     public void quizRequest() throws IOException {
         // create a correct req for server
         JSONObject req = new JSONObject();
-        req.put("type", "quiz");
+        req.put("type", "quizgame");
         req.put("question", "What is the capital of France?");
         List<String> myList = Arrays.asList(
                 "Paris",
@@ -264,7 +264,7 @@ public class ServerTest {
         JSONObject res = new JSONObject(i);
         // test response
         assertTrue(res.getBoolean("ok"));
-        assertEquals("quiz", res.getString("type"));
+        assertEquals("quizgame", res.getString("type"));
         assertEquals(0, res.getInt("result"));
 
     }
@@ -273,7 +273,7 @@ public class ServerTest {
     public void quizRequestWrong() throws IOException {
         // create a correct req for server
         JSONObject req = new JSONObject();
-        req.put("type", "quiz");
+        req.put("type", "quizgame");
         req.put("question", "What is the capital of France?");
         List<String> myList = Arrays.asList(
                 "Paris",
@@ -300,7 +300,7 @@ public class ServerTest {
     public void concatenationRequest() throws IOException {
         // create a correct req for server
         JSONObject req = new JSONObject();
-        req.put("type", "concatenation");
+        req.put("type", "stringconcatenation");
         List<String> myList = Arrays.asList(
                 "hello",
                 "world",
@@ -316,7 +316,7 @@ public class ServerTest {
         JSONObject res = new JSONObject(i);
         // test response
         assertTrue(res.getBoolean("ok"));
-        assertEquals("concatenation", res.getString("type"));
+        assertEquals("stringconcatenation", res.getString("type"));
         assertEquals("helloworld!", res.getString("result"));
 
     }
