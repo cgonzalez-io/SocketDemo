@@ -11,7 +11,7 @@ import java.util.Scanner;
 /**
  *
  */
-class SockClient {
+public class SockClient {
     static Socket sock = null;
     static String host = "localhost";
     static int port = 8888;
