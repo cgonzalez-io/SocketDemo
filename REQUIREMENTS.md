@@ -1,15 +1,15 @@
 
 ## Activity 1: Simple Server/Client (30 points)
 
-- [ ] **Directory Structure and Starter Code**
-    - [ ] Copy both starter codes into the correct directories (e.g., `Assignment3/Assign3-1` and `Assignment3/Assign3-2`).
-    - [ ] Use the provided starter code as a guideline.
+- [X] **Directory Structure and Starter Code**
+    - [X] Copy both starter codes into the correct directories (e.g., `Assignment3/Assign3-1` and `Assignment3/Assign3-2`).
+    - [X] Use the provided starter code as a guideline.
 
-- [ ] **Protocol Implementation**
+- [X] **Protocol Implementation**
     - [X] Follow the exact JSON protocol as described in the README.
     - [X] Do not change the protocol; ensure any client can communicate with any server.
 
-- [ ] **Implemented Services**
+- [X] **Implemented Services**
     - [X] **Echo Service** (Already implemented)
         - [X] Server returns the echoed string if valid.
         - [X] Error handling if `"data"` field is missing or wrong type.
@@ -31,7 +31,7 @@
 
 - [X] **Error Handling and Unit Testing**
     - [X] Implement robust error handling on the server side (e.g., missing fields, incorrect types).
-    - [ ] Provide comprehensive unit tests covering:
+    - [X] Provide comprehensive unit tests covering:
         - Valid and invalid requests.
         - Each service (echo, add, addmany, string concatenation, and quizgame).
     - [X] Ensure the server does not crash on unexpected input.
