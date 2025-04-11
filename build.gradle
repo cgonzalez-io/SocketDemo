@@ -13,6 +13,8 @@ dependencies {
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.16'
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     runtimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.16'
+    // https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api
+    implementation group: 'jakarta.xml.bind', name: 'jakarta.xml.bind-api', version: '4.0.2'
 }
 
 // Server task - allows host and port configuration as inputs

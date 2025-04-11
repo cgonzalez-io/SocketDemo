@@ -1,14 +1,17 @@
+import jakarta.xml.bind.DatatypeConverter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.DataOutputStream;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A class to demonstrate a simple client-server connection using sockets.
@@ -17,12 +20,33 @@ import java.util.ArrayList;
  */
 public class SockServer {
     private static final Logger logger = LoggerFactory.getLogger(SockServer.class);
+    private static final byte[] JAVA_MAGIC_HEADER = {(byte) 0xAC, (byte) 0xED, 0x00, 0x05};
+    // A simple rate limiter per IP (you can swap this with a more advanced implementation)
+// Note: This is a simple example and may require refinement for production use.
+    private static final Map<String, Integer> connectionAttempts = new ConcurrentHashMap<>();
+    private static final int MAX_CONNECTIONS_PER_MINUTE = 4;
     static ArrayList<Question> quizQuestions = new ArrayList<>();
 
     // Static initializer for quiz questions.
     static {
         quizQuestions.add(new Question("What is 2+2?", "4"));
         quizQuestions.add(new Question("What is the capital of France?", "Paris"));
+    }
+
+    /**
+     * Checks if the specified IP address has exceeded the allowed number of connection attempts
+     * within a defined time period.
+     *
+     * @param ip the IP address to check for rate limiting
+     * @return true if the IP address is rate-limited, false otherwise
+     */
+    private static boolean isRateLimited(String ip) {
+        int count = connectionAttempts.getOrDefault(ip, 0);
+        if (count > MAX_CONNECTIONS_PER_MINUTE) {
+            return true;
+        }
+        connectionAttempts.put(ip, count + 1);
+        return false;
     }
 
     public static void main(String[] args) {
@@ -64,12 +88,38 @@ public class SockServer {
      * Processes a single client connection in a try-with-resources block.
      */
     private static void handleClient(Socket clientSocket) {
-        // Use try-with-resources to ensure streams and socket are closed.
+        String clientIP = clientSocket.getInetAddress().getHostAddress();
+
+        // Rate limiting check.
+        if (isRateLimited(clientIP)) {
+            logger.warn("Rate limit exceeded for client IP: {}", clientIP);
+            try {
+                clientSocket.close();
+            } catch (Exception ignore) {
+            }
+            return;
+        }
+
         try (
-                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                // Wrap the raw input stream so we can check the magic header first.
+                BufferedInputStream bis = new BufferedInputStream(clientSocket.getInputStream());
                 DataOutputStream os = new DataOutputStream(clientSocket.getOutputStream())
         ) {
-            // Holds the current quiz question (for quiz game requests).
+            bis.mark(8);  // mark the stream so we can reset it after reading the first 4 bytes.
+            byte[] header = new byte[4];
+            int readCount = bis.read(header);
+            if (readCount != 4 || !Arrays.equals(header, JAVA_MAGIC_HEADER)) {
+                // Log the received header as a hex string for diagnostic purposes.
+                String hexHeader = DatatypeConverter.printHexBinary(header);
+                logger.warn("[{}] Received invalid magic header: {}. Connection will be closed.", clientSocket.getRemoteSocketAddress(), hexHeader);
+                clientSocket.close();
+                return;
+            }
+            // Reset the stream so that ObjectInputStream can read the entire serialized stream.
+            bis.reset();
+            ObjectInputStream in = new ObjectInputStream(bis);
+
+            // Process the connection using your protocol as before.
             final Question[] currentQuizQuestionHolder = new Question[1];
             boolean connected = true;
             while (connected) {
@@ -77,9 +127,15 @@ public class SockServer {
                 try {
                     input = (String) in.readObject();
                     logger.info("[{}] Received request: {}", clientSocket.getRemoteSocketAddress(), input);
+                } catch (EOFException eof) {
+                    logger.warn("[{}] Client disconnected unexpectedly: {}", clientSocket.getRemoteSocketAddress(), eof.getMessage());
+                    break;
+                } catch (StreamCorruptedException sce) {
+                    logger.warn("[{}] Stream corrupted: {}", clientSocket.getRemoteSocketAddress(), sce.getMessage());
+                    break;
                 } catch (Exception e) {
-                    logger.warn("[{}] Client disconnected or sent invalid data: {}", clientSocket.getRemoteSocketAddress(), e.getMessage());
-                    break; // exit loop, client disconnected
+                    logger.warn("[{}] Exception reading from client: {}. Possibly bad protocol data.", clientSocket.getRemoteSocketAddress(), e.getMessage());
+                    break;
                 }
 
                 // Validate that the input is valid JSON. If not, send an error response.
